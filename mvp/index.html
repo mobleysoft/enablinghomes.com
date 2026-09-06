@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnablingHomes — Home Accessibility Needs Assessment (MVP)</title>
+<style>
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif; background:#0b1410; color:#eee; margin:0; padding:2rem; }
+  h1 { font-size:1.4rem; }
+  .note { color:#9adba0; font-size:0.85rem; max-width:680px; line-height:1.4; }
+  form { max-width:600px; margin-top:1.2rem; }
+  fieldset { border:1px solid #234; border-radius:6px; margin-bottom:0.8rem; padding:0.6rem 1rem; }
+  label { display:block; margin:0.4rem 0; font-size:0.9rem; }
+  select, input[type=text] { padding:0.3rem; border-radius:4px; border:1px solid #345; background:#111a16; color:#eee; }
+  button { margin-top:0.8rem; padding:0.6rem 1.2rem; background:#2f7a4f; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+  #result { max-width:680px; margin-top:1.5rem; }
+  .item { border-left:4px solid #666; padding:0.4rem 0.8rem; margin:0.4rem 0; background:#111a16; border-radius:0 6px 6px 0; }
+  .high { border-color:#e05252; }
+  .medium { border-color:#e0b552; }
+  .low { border-color:#5da3e0; }
+  .urgency { font-weight:bold; }
+</style>
+</head>
+<body>
+<h1>EnablingHomes — Accessibility Needs Assessment</h1>
+<p class="note">Answer these about the home and the person's mobility needs. The checklist below
+is computed live from your answers via real rule-based logic (not a fixed list) -- different
+answers produce a different, differently-prioritized checklist.</p>
+<p class="note">Honest scope note: the "connects to vetted local contractors" half of the
+original spec is, right now, a plain lead-capture form below the checklist -- there is no real
+vetted-contractor network built yet. It collects your info and topic so a real referral could be
+made later; it does not pretend to already have contractors on file.</p>
+
+<form id="f">
+  <fieldset>
+    <legend>Mobility &amp; access</legend>
+    <label>Mobility aid used: <select name="mobilityAid">
+      <option value="none">None</option>
+      <option value="cane">Cane</option>
+      <option value="walker">Walker</option>
+      <option value="wheelchair">Wheelchair</option>
+    </select></label>
+    <label><input type="checkbox" name="hasStairsToMainLiving"> Stairs required to reach the main living area</label>
+    <label><input type="checkbox" name="hasHandrailBothSides"> Stairs already have handrails on both sides</label>
+    <label><input type="checkbox" name="hasStepAtEntry"> A step (not ramped) at the main entrance</label>
+  </fieldset>
+  <fieldset>
+    <legend>Bathroom &amp; safety</legend>
+    <label><input type="checkbox" name="bathroomHazard"> No grab bars / has a tub with a high step-over lip</label>
+    <label><input type="checkbox" name="hasArthritisOrGripIssue"> Arthritis or limited grip strength</label>
+    <label><input type="checkbox" name="hallwaysDimlyLit"> Hallways/stairwells are dimly lit at night</label>
+    <label><input type="checkbox" name="livesAlone"> Lives alone</label>
+    <label><input type="checkbox" name="fallHistory"> Has fallen at home in the past year</label>
+  </fieldset>
+  <button type="submit">Generate checklist</button>
+</form>
+
+<div id="result"></div>
+
+<h3 style="max-width:680px">Get connected to a contractor (lead capture)</h3>
+<form id="lead" style="max-width:600px">
+  <label>Name <input type="text" name="name" required></label>
+  <label>Email <input type="text" name="email" required></label>
+  <label>City/ZIP <input type="text" name="location" required></label>
+  <button type="submit">Request a referral</button>
+</form>
+<p id="leadMsg"></p>
+
+<script src="assessment.js"></script>
+<script>
+document.getElementById('f').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const answers = {
+    mobilityAid: fd.get('mobilityAid'),
+    hasStairsToMainLiving: fd.has('hasStairsToMainLiving'),
+    hasHandrailBothSides: fd.has('hasHandrailBothSides'),
+    hasStepAtEntry: fd.has('hasStepAtEntry'),
+    bathroomHazard: fd.has('bathroomHazard'),
+    hasArthritisOrGripIssue: fd.has('hasArthritisOrGripIssue'),
+    hallwaysDimlyLit: fd.has('hallwaysDimlyLit'),
+    livesAlone: fd.has('livesAlone'),
+    fallHistory: fd.has('fallHistory')
+  };
+  const r = assessAccessibilityNeeds(answers);
+  const div = document.getElementById('result');
+  div.innerHTML = `<p class="urgency">Overall urgency: ${r.urgency.toUpperCase()} (${r.itemCount} recommendations)</p>` +
+    r.checklist.map(i => `<div class="item ${i.priority}"><b>[${i.priority}]</b> ${i.recommendation}</div>`).join('') +
+    (r.itemCount === 0 ? '<p>No specific hazards flagged from your answers.</p>' : '');
+});
+
+document.getElementById('lead').addEventListener('submit', (e) => {
+  e.preventDefault();
+  // No backend wired yet -- honestly just acknowledges receipt locally.
+  document.getElementById('leadMsg').textContent =
+    'Thanks -- this demo does not yet send this anywhere (no contractor network exists to route it to). In production this would submit to a real intake queue.';
+  e.target.reset();
+});
+
+// Run once with all-unchecked defaults so the page isn't empty on load.
+document.getElementById('f').dispatchEvent(new Event('submit'));
+</script>
+</body>
+</html>
