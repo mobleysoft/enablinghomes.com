@@ -28,8 +28,9 @@ is computed live from your answers via real rule-based logic (not a fixed list) 
 answers produce a different, differently-prioritized checklist.</p>
 <p class="note">Honest scope note: the "connects to vetted local contractors" half of the
 original spec is, right now, a plain lead-capture form below the checklist -- there is no real
-vetted-contractor network built yet. It collects your info and topic so a real referral could be
-made later; it does not pretend to already have contractors on file.</p>
+vetted-contractor network built yet. It saves your info and location to a real intake queue so a
+human could follow up later; it does not pretend a referral network already exists or that anyone
+is automatically notified.</p>
 
 <form id="f">
   <fieldset>
@@ -89,12 +90,31 @@ document.getElementById('f').addEventListener('submit', (e) => {
     (r.itemCount === 0 ? '<p>No specific hazards flagged from your answers.</p>' : '');
 });
 
-document.getElementById('lead').addEventListener('submit', (e) => {
+document.getElementById('lead').addEventListener('submit', async (e) => {
   e.preventDefault();
-  // No backend wired yet -- honestly just acknowledges receipt locally.
-  document.getElementById('leadMsg').textContent =
-    'Thanks -- this demo does not yet send this anywhere (no contractor network exists to route it to). In production this would submit to a real intake queue.';
-  e.target.reset();
+  const fd = new FormData(e.target);
+  const msg = document.getElementById('leadMsg');
+  msg.textContent = 'Submitting...';
+  try {
+    const res = await fetch('/api/enablinghomes/referral-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: fd.get('name'),
+        email: fd.get('email'),
+        location: fd.get('location')
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      msg.textContent = 'Request saved (id: ' + data.id + '). ' + data.note;
+      e.target.reset();
+    } else {
+      msg.textContent = (data.detail && data.detail.message) || 'Something went wrong.';
+    }
+  } catch (err) {
+    msg.textContent = err.message;
+  }
 });
 
 // Run once with all-unchecked defaults so the page isn't empty on load.
