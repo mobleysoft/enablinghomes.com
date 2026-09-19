@@ -56,16 +56,16 @@ is automatically notified.</p>
   <button type="submit">Generate checklist</button>
 </form>
 
-<div id="result"></div>
+<div id="result" role="status" aria-live="polite"></div>
 
-<h3 style="max-width:680px">Get connected to a contractor (lead capture)</h3>
+<h2 style="max-width:680px; font-size:1.15rem;">Get connected to a contractor (lead capture)</h2>
 <form id="lead" style="max-width:600px">
   <label>Name <input type="text" name="name" required></label>
   <label>Email <input type="text" name="email" required></label>
   <label>City/ZIP <input type="text" name="location" required></label>
   <button type="submit">Request a referral</button>
 </form>
-<p id="leadMsg"></p>
+<p id="leadMsg" role="status" aria-live="polite"></p>
 
 <script src="assessment.js"></script>
 <script>
